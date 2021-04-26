@@ -30,6 +30,7 @@ pub struct Morpheme<'dict, 'input> {
     pub surface: &'input str,
     pub basic: &'dict str,
     pub word_class: WordClass<'dict>,
+    pub conjungation: Conjungation,
     pub origin: Option<Origin>,
     pub reading: &'dict str,
     pub lexeme: &'dict str,
@@ -40,18 +41,25 @@ impl<'dict, 'input> From<IgoMorpheme<'dict, 'input>> for Morpheme<'dict, 'input>
     fn from(igo_morph: IgoMorpheme<'dict, 'input>) -> Morpheme<'dict, 'input> {
         println!("{:#?}", igo_morph);
         let features: &Vec<_> = &igo_morph.feature.split(',').collect();
+
         let word_class: WordClass = features.try_into().unwrap();
 
-        let origin = {
-            if features.len() > 12 {
-                Origin::from_string(features[12])
-            } else {
-                None
-            }
+        let conjungation_form: ConjungationForm = features.try_into().unwrap();
+        let conjungation_kind: ConjungationKind = features.try_into().unwrap();
+
+        let conjungation = Conjungation {
+            kind: conjungation_kind,
+            form: conjungation_form,
+        };
+
+        let origin = if features.len() > 12 {
+            Origin::from_string(features[12])
+        } else {
+            None
         };
 
         let basic = str_or_empty(features, 6);
-        let lexeme = str_or_empty(features, 8);
+        let lexeme = str_or_empty(features, 10);
         let reading = str_or_empty(features, 9);
 
         Morpheme {
@@ -62,15 +70,64 @@ impl<'dict, 'input> From<IgoMorpheme<'dict, 'input>> for Morpheme<'dict, 'input>
             reading,
             word_class,
             origin,
+            conjungation,
         }
     }
 }
 
-fn str_or_empty<'a>(vec: &Vec<&'a str>, pos: usize) -> &'a str {
-    if vec.len() > pos {
-        vec[pos]
-    } else {
-        ""
+#[derive(Clone, Debug, PartialEq, Copy)]
+pub struct Conjungation {
+    pub kind: ConjungationKind,
+    pub form: ConjungationForm,
+}
+
+#[derive(Clone, Debug, PartialEq, Copy)]
+pub enum ConjungationKind {
+    None,
+}
+
+#[derive(Clone, Debug, PartialEq, Copy)]
+pub enum ConjungationForm {
+    None,
+    Plain,
+    Imperative,
+    Negative,
+    Attributive,
+    Continuous,
+    Conditional,
+    Stem,
+    Realis,
+    Kugohou,
+}
+
+impl<'a> TryFrom<&Vec<&'a str>> for ConjungationKind {
+    type Error = String;
+    fn try_from(value: &Vec<&'a str>) -> Result<Self, Self::Error> {
+        Ok(match value[4] {
+            _ => Self::None,
+            //_ => return Err(format!("conjungation kind not found {}", value[4])),
+        })
+    }
+}
+
+impl<'a> TryFrom<&Vec<&'a str>> for ConjungationForm {
+    type Error = String;
+    fn try_from(value: &Vec<&'a str>) -> Result<Self, Self::Error> {
+        let t = split_type(value[5]).0;
+        Ok(match t {
+            "*" => ConjungationForm::None,
+            "終止形" => ConjungationForm::Plain,
+            "命令形" => ConjungationForm::Imperative,
+            "未然形" => ConjungationForm::Negative,
+            "連体形" => ConjungationForm::Attributive,
+            "連用形" => ConjungationForm::Continuous,
+            "仮定形" => ConjungationForm::Conditional,
+            "語幹" => ConjungationForm::Stem,
+            "已然形" => ConjungationForm::Realis,
+            "意志推量形" => ConjungationForm::None, // wtf is this?
+            "ク語法" => ConjungationForm::Kugohou,
+            _ => return Err(format!("conjungation form not found {}", t)),
+        })
     }
 }
 
@@ -299,4 +356,12 @@ impl Origin {
 fn split_type<'a>(inp: &'a str) -> (&'a str, &'a str) {
     let mut s = inp.split("-");
     (s.next().unwrap_or(""), s.next().unwrap_or(""))
+}
+
+fn str_or_empty<'a>(vec: &Vec<&'a str>, pos: usize) -> &'a str {
+    if vec.len() > pos {
+        vec[pos]
+    } else {
+        ""
+    }
 }

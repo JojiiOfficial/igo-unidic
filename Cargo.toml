@@ -11,6 +11,10 @@ edition = "2018"
 name = "igo_unidic"
 path = "src/lib.rs"
 
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
 [dependencies]
 #igo-rs-fork = { path = "../igo-rs" }
 igo-rs-fork = { git = "https://github.com/JojiiOfficial/igo-rs-fork" }

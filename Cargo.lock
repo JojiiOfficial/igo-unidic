@@ -45,6 +45,7 @@ checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
 [[package]]
 name = "igo-rs-fork"
 version = "0.3.0"
+source = "git+https://github.com/JojiiOfficial/igo-rs-fork#8866db9e0cf8c0b539f4d17f6471587de51c0c19"
 dependencies = [
  "bit-set",
  "byteorder",
