@@ -1,0 +1,16 @@
+[package]
+name = "igo-unidic"
+version = "0.1.0"
+authors = ["jojii <jojii@gmx.net>"]
+license = "GPLv3"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "igo_unidic"
+path = "src/lib.rs"
+
+[dependencies]
+#igo-rs-fork = { path = "../igo-rs" }
+igo-rs-fork = { git = "https://github.com/JojiiOfficial/igo-rs-fork" }
