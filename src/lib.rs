@@ -25,7 +25,7 @@ impl Parser {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Copy)]
 pub struct Morpheme<'dict, 'input> {
     pub surface: &'input str,
     pub basic: &'dict str,
@@ -39,7 +39,6 @@ pub struct Morpheme<'dict, 'input> {
 
 impl<'dict, 'input> From<IgoMorpheme<'dict, 'input>> for Morpheme<'dict, 'input> {
     fn from(igo_morph: IgoMorpheme<'dict, 'input>) -> Morpheme<'dict, 'input> {
-        println!("{:#?}", igo_morph);
         let features: &Vec<_> = &igo_morph.feature.split(',').collect();
 
         let word_class: WordClass = features.try_into().unwrap();
@@ -145,6 +144,80 @@ pub enum WordClass<'a> {
     Suffix,
     Prefix,
     PreNoun,
+    Space,
+}
+
+impl<'a> Default for WordClass<'a> {
+    fn default() -> Self {
+        Self::Adverb
+    }
+}
+
+impl<'a> WordClass<'a> {
+    /// Returns `true` if the word_class is [`Particle`].
+    pub fn is_particle(&self) -> bool {
+        matches!(self, Self::Particle(..))
+    }
+
+    /// Returns `true` if the word_class is [`Verb`].
+    pub fn is_verb(&self) -> bool {
+        matches!(self, Self::Verb(..))
+    }
+
+    /// Returns `true` if the word_class is [`Adjective`].
+    pub fn is_adjective(&self) -> bool {
+        matches!(self, Self::Adjective(..))
+    }
+
+    /// Returns `true` if the word_class is [`Noun`].
+    pub fn is_noun(&self) -> bool {
+        matches!(self, Self::Noun(..))
+    }
+
+    /// Returns `true` if the word_class is [`Pronoun`].
+    pub fn is_pronoun(&self) -> bool {
+        matches!(self, Self::Pronoun)
+    }
+
+    /// Returns `true` if the word_class is [`Interjection`].
+    pub fn is_interjection(&self) -> bool {
+        matches!(self, Self::Interjection)
+    }
+
+    /// Returns `true` if the word_class is [`Symbol`].
+    pub fn is_symbol(&self) -> bool {
+        matches!(self, Self::Symbol)
+    }
+
+    /// Returns `true` if the word_class is [`Conjungtion`].
+    pub fn is_conjungtion(&self) -> bool {
+        matches!(self, Self::Conjungtion)
+    }
+
+    /// Returns `true` if the word_class is [`Suffix`].
+    pub fn is_suffix(&self) -> bool {
+        matches!(self, Self::Suffix)
+    }
+
+    /// Returns `true` if the word_class is [`Prefix`].
+    pub fn is_prefix(&self) -> bool {
+        matches!(self, Self::Prefix)
+    }
+
+    /// Returns `true` if the word_class is [`PreNoun`].
+    pub fn is_pre_noun(&self) -> bool {
+        matches!(self, Self::PreNoun)
+    }
+
+    /// Returns `true` if the word_class is [`Space`].
+    pub fn is_space(&self) -> bool {
+        matches!(self, Self::Space)
+    }
+
+    /// Returns `true` if the word_class is [`Adverb`].
+    pub fn is_adverb(&self) -> bool {
+        matches!(self, Self::Adverb)
+    }
 }
 
 impl<'a> TryFrom<&Vec<&'a str>> for WordClass<'a> {
@@ -161,6 +234,7 @@ impl<'a> TryFrom<&Vec<&'a str>> for WordClass<'a> {
             "接尾辞" => WordClass::Suffix,
             "接頭辞" => WordClass::Prefix,
             "副詞" => WordClass::Adverb,
+            "空白" => WordClass::Space,
             "名詞" => WordClass::Noun(NounType::try_from(value)?),
             "連体詞" => WordClass::PreNoun,
             _ => return Err(format!("wc not found {}", value[0])),
@@ -176,6 +250,8 @@ pub enum NounType {
     Common,
     Proper,
     Numeral,
+    Suffix,
+    Jodoushi,
 }
 
 impl TryFrom<&Vec<&str>> for NounType {
@@ -184,7 +260,9 @@ impl TryFrom<&Vec<&str>> for NounType {
         Ok(match value[1] {
             "普通名詞" => Self::Common,
             "固有名詞" => Self::Proper,
-            "数詞" => Self::Numeral,
+            "数詞" | "数" => Self::Numeral,
+            "接尾" => Self::Suffix,
+            "助動詞語幹" => Self::Jodoushi,
             _ => return Err(format!("Nountype not found {}", value[1])),
         })
     }
@@ -354,7 +432,11 @@ impl Origin {
 
 /// Splits a type definition and gets both sides
 fn split_type<'a>(inp: &'a str) -> (&'a str, &'a str) {
-    let mut s = inp.split("-");
+    let mut s = if inp.contains("-") {
+        inp.split("-")
+    } else {
+        inp.split("・")
+    };
     (s.next().unwrap_or(""), s.next().unwrap_or(""))
 }
 
