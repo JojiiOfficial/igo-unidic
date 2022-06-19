@@ -6,6 +6,7 @@ use std::{
 use igo::Morpheme as IgoMorpheme;
 use igo::Tagger;
 
+#[derive(Clone)]
 pub struct Parser {
     parser: Tagger,
 }
@@ -325,6 +326,7 @@ pub enum VerbType<'a> {
     Godan(SyllableRow),
     Ichidan(SyllableRow),
     IchidanEruConjungation,
+    IrrWrittenLang,
     Suru,
     Kuru,
     IrregRu,
@@ -358,6 +360,7 @@ impl<'a> VerbType<'a> {
             "カ行変格" => VerbType::Kuru,
             "ラ行変格" | "文語ラ行変格" => VerbType::IrregRu,
             "ナ行変格" | "文語ナ行変格" => VerbType::IrregNu,
+            "文語カ行変格" => VerbType::IrrWrittenLang,
             _ => return Err(format!("Verbtype {} not found", verb_type.0)),
         })
     }
