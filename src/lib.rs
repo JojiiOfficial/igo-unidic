@@ -361,6 +361,7 @@ impl<'a> VerbType<'a> {
             "ラ行変格" | "文語ラ行変格" => VerbType::IrregRu,
             "ナ行変格" | "文語ナ行変格" => VerbType::IrregNu,
             "文語カ行変格" => VerbType::IrrWrittenLang,
+            "文語上一段" => VerbType::IrrWrittenLang,
             _ => return Err(format!("Verbtype {} not found", verb_type.0)),
         })
     }
